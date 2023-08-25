@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="dark" data-bs-theme="dark" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raidcopy Inventory Finder</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.7.0.slim.min.js"></script>
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/plug-ins/1.11.3/features/fuzzySearch/dataTables.fuzzySearch.js"></script>
+    <!-- These are all RGB values in hex, feel free to change them to anything-->
+    <style>
+        body {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        #txtTable {
+            background-color: #444;
+            color: #f0f0f0;
+        }
+        #txtTable th {
+            background-color: #555;
+            color: #f0f0f0;
+        }
+        #txtTable tr:nth-child(odd) {
+            background-color: #555;
+        }
+        #txtTable a {
+            color: #99ccff;
+        }
+    </style>
+</head>
+
+<body>
+Raidcopy Finder: Use search!
+<table id="txtTable" class="display">
+    <thead>
+    <tr>
+        <th>Location</th>
+        <th>Name</th>
+        <th>ID</th>
+        <th>Count</th>
+        <th>Slots</th>
+        <th>Link</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+  $(document).ready(function () {
+    fetch('inventory.txt')
+      .then(response => response.text())
+      .then(data => {
+
+        fetch('itemlist.txt')
+          .then(response => response.text())
+          .then(lucy => {
+
+            //load lucy item list
+            const lines = lucy.trim().split('\n').slice(1); // Remove header
+
+            //itemMap holds a dict mapping from an item's name to its lucy link
+            const itemMap = lines.reduce((map, line) => {
+              //Really basic regex parser that splits into accessible groups
+              const match = line.match(/^.*?,"(.*?)",(.*?)$/);
+              if (match) {
+                map[match[1]] = match[2]; // Create map Keyed by name, value is lucylink
+              }
+              return map;
+            }, {});
+
+            // interact with inventory export
+            const rows = data.split('\n').slice(1); // remove header
+            // Create DataTable that infers from the HTML how many cells to produce
+            const table = $('#txtTable').DataTable({
+              // Enable fuzzy search plugin so you can do things like "muhbis ring" to
+              // filter for all items that have something somewhat like that
+              fuzzySearch: true
+            });
+
+            rows.forEach(row => {
+              const cells = row.split('\t'); // split by tab
+              cells.push(""); // Must create empty spot here for possibility of item link
+              if (cells.length === 6) {
+                // cells[1] is the item name from lucy
+                let link = itemMap[cells[1]];
+
+                if (link !== null && link !== undefined) {
+                  // Turn the lucy link into an HTML link
+                  let url = `<a href="${link}">${cells[1]}</a>`
+                  // replace the earlier cells.push("") with the lucy link
+                  cells[5] = url;
+                }
+                table.row.add(cells);
+              }
+            });
+            table.draw();
+          })
+      })
+      .catch(error => console.error('An error occurred:', error));
+  });
+</script>
+</body>
+
+</html>
