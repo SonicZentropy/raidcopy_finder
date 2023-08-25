@@ -4,5 +4,6 @@
 3) Place it next to the `item-list.html` file.
 4) Download Lucy's item database dump from https://lucy.allakhazam.com/itemlist.txt.gz
 5) Extract it into the same folder as inventory.txt and item-list.html.  Leave it named itemlist.txt  
-6) Profit
+6) Push it to Github and ensure the RAW link in index.html is still correct
+7) Profit
 
